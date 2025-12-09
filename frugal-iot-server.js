@@ -28,7 +28,7 @@
  * /ota_update/:org/:project/:node/:attribs  OTA updates - this is what nodes call
  *Δ /admin (get) dashboard for administrators - includes OTA and will include permission management
  P /ota_update (post) protected place to upload new binaries (OTAUPDATE)
- XP /ota/:org list all ota files for an organization
+ XP /ota_list/:org list all ota files for an organization
  O  /private Serve up private files under authentication - currently unused
  * /register (post) register a new user
  */
@@ -208,7 +208,19 @@ function clientErrorHandler(err, req, res, next) {
     //next(err); // Default handler - as now
   }
 }
-
+const sqlPeopleList = `
+  SELECT u.id, u.name, p.capability
+  FROM users u
+  INNER JOIN permissions p ON u.id = p.id AND p.org = ?
+;`;
+function get_people_list(org, cb) {
+  db.all(sqlPeopleList, [org], (err, rows) => {
+    if (err) {
+      cb(err);
+    } else {
+      cb(null, rows); // [{ id, name, capability }]
+    }});
+}
 // Recursively walk a directory, callback with a list of files that pass matches(filename)
 function readFilesRecursively(dir, matches, callback) {
   let results = [];
@@ -338,6 +350,14 @@ function hasPermissions(user, org, permission) {
 // Not used as check direct in Multer storage, (since Multer fills the body) but use as template for other permissions (and then delete this comment)
 function can_OTAUPDATE(req, res, next) {
   if (req.isAuthenticated() && hasPermissions(req.user, req.params.org, "OTAUPDATE")) {
+    next();
+  } else {
+    res.sendStatus(401); // Just fail - shouldnt happen and anyway lost the file by now
+  }
+}
+// Not used as check direct in Multer storage, (since Multer fills the body) but use as template for other permissions (and then delete this comment)
+function can_ADMIN(req, res, next) {
+  if (req.isAuthenticated() && hasPermissions(req.user, req.params.org, "ADMIN")) {
     next();
   } else {
     res.sendStatus(401); // Just fail - shouldnt happen and anyway lost the file by now
@@ -674,9 +694,23 @@ mqttLogger.readYamlConfig('.', (err, configobj) => {
                   if (err) {
                     res.status(500).json({message: err.message});
                   } else {
-                    res.status(200).json(dirs); // Strip off /firmware.bin
+                    res.status(200).json(dirs);
                   }
                 });
+              }
+            });
+          }
+        );
+        app.get('/people_list/:org',
+          loggedInOrFail,
+          can_ADMIN,
+          (req,res) => {
+            // TODO-89 list all People for an organization
+            get_people_list(req.params.org, (err, people) => {
+              if (err) {
+                res.status(500).json({message: err.message});
+              } else {
+                res.status(200).json(people);
               }
             });
           }
