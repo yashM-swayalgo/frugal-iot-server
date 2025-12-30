@@ -800,7 +800,13 @@ mqttLogger.readYamlConfig('.', (err, configobj) => {
           loggedInOrRedirect,
           //(req,res,next) => { console.log("/private handler authenticated by session for", req.url); next(); },
           // TODO-89 should configure where /private is - maybe in frugal-iot-client
-          express.static(config.server.privatedir, {immutable: true, maxAge: 1000 * 60 * 60 * 24}));
+          express.static(config.server.privatedir, { immutable: true, maxAge: 1000 * 60 * 60 * 24 }));
+
+        // Serve service worker with no-cache to allow updates
+        app.get('/service-worker.js', (req, res) => {
+          res.set('Cache-Control', 'no-cache');
+          res.sendFile(path.resolve(config.server.publicdir, 'service-worker.js'));
+        });
 
         // Serve HTML files from a configurable location
         // Use a 1-day cache to keep traffic down
