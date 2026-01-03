@@ -53,5 +53,9 @@ data/
 
 #do not upload db files.
 *.db
+*.db.bak
 *.sqlite
 *.sqlite3
+
+# Access keys and credentials
+firebase-service-account.json

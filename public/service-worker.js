@@ -1,3 +1,5 @@
+// Change this version number if want existing installs of PWA to refresh their cache
+// TODO-28 - probably make this the same as the app version in frugal-iot-client
 const CACHE_NAME = 'frugal-iot-cache-v1';
 const urlsToCache = [
     '/',
@@ -36,6 +38,7 @@ self.addEventListener('fetch', event => {
     );
 });
 
+// Delete old caches during activation
 self.addEventListener('activate', event => {
     const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
