@@ -2,7 +2,7 @@
   "name": "Frugal IoT",
   "short_name": "Frugal IoT",
   "description": "User end PWA for Frugal IoT",
-  "start_url": "/index.html",
+  "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#007bff",
